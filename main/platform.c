@@ -62,7 +62,7 @@
 
 #include "ota-tftp.h"
 
-uint32_t swd_delay_cnt;
+uint32_t target_clk_divider=100;
 #define SWD_CYCLES_PER_CLOCK 19L
 #define SWD_TOTAL_CYCLES 127L
 
@@ -73,14 +73,14 @@ void platform_max_frequency_set(uint32_t freq)
 	if(freq < 50000) return;
   int cnt = (160000000L - SWD_TOTAL_CYCLES*(int)freq)/(SWD_CYCLES_PER_CLOCK*(int)freq);
   if(cnt < 0) cnt = 0;
-  swd_delay_cnt = cnt;
-  ESP_LOGI(__func__, "freq:%u set delay cycles: %d", freq, swd_delay_cnt);
+  target_clk_divider = cnt;
+  ESP_LOGI(__func__, "freq:%u set delay cycles: %d", freq, target_clk_divider);
 
 }
 
 uint32_t platform_max_frequency_get(void)
 {
-	return 160000000 / (swd_delay_cnt*SWD_CYCLES_PER_CLOCK+SWD_TOTAL_CYCLES);
+	return 160000000 / (target_clk_divider*SWD_CYCLES_PER_CLOCK+SWD_TOTAL_CYCLES);
 }
 
 nvs_handle h_nvs_conf;
@@ -450,7 +450,7 @@ void wifi_init_softap()
     uint64_t chipid;
     esp_read_mac((uint8_t*)&chipid, ESP_MAC_WIFI_SOFTAP);
     
-    if(strcmp(CONFIG_ESP_WIFI_SSID, "auto") == 0 || CONFIG_ESP_WIFI_IS_STATION) {
+    if(strcmp(CONFIG_ESP_WIFI_SSID, "auto") == 0 || CONFIG_ESP_WIFI_IS_SOFTAP) {
         wifi_config.ap.ssid_len = sprintf((char*)wifi_config.ap.ssid, "blackmagic_%X", (uint32_t)chipid);
     } else {
         wifi_config.ap.ssid_len = sprintf((char*)wifi_config.ap.ssid, CONFIG_ESP_WIFI_SSID);
@@ -569,7 +569,7 @@ void app_main(void) {
 
   esp_log_set_putchar(putc_remote);
 
-  uint32_t baud = 230400;
+  uint32_t baud = 115200;
   nvs_get_u32(h_nvs_conf, "uartbaud", &baud);
 
   uart_set_baudrate(0, baud);
@@ -614,3 +614,27 @@ int ets_printf(const char *__restrict c, ...) { return 0; }
 __attribute((used))
 int printf(const char *__restrict c, ...) { return 0; }
 #endif
+
+bool platform_spi_init(const spi_bus_e bus)
+{
+	(void)bus;
+	return false;
+}
+
+bool platform_spi_deinit(const spi_bus_e bus)
+{
+	(void)bus;
+	return false;
+}
+
+bool platform_spi_chip_select(const uint8_t device_select)
+{
+	(void)device_select;
+	return false;
+}
+
+uint8_t platform_spi_xfer(const spi_bus_e bus, const uint8_t value)
+{
+	(void)bus;
+	return value;
+}

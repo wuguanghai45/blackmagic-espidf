@@ -1,6 +1,8 @@
 #undef _GNU_SOURCE 
 #include_next <general.h>
 
+#include "platform.h"
+
 #ifndef TEST
 #define TEST
 #include <string.h>

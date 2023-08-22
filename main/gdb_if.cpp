@@ -340,6 +340,23 @@ void gdb_putpacket2(const char *const packet1, const size_t size1, const char *c
 	_this->gdb_putpacket2(packet1, size1, packet2, size2);
 }
 
+extern "C"
+char *gdb_packet_buffer() {
+	void** ptr = (void**)pvTaskGetThreadLocalStoragePointer(NULL, 0);
+	assert(ptr);
+	GDB* _this = (GDB*)ptr[0];
+	return _this->pbuf;
+}
+
+extern "C"
+size_t gdb_getpacket(char *packet, size_t size) {
+	void** ptr = (void**)pvTaskGetThreadLocalStoragePointer(NULL, 0);
+	assert(ptr);
+	GDB* _this = (GDB*)ptr[0];
+	return _this->gdb_getpacket(packet, size);
+}
+
+
 #if 0
 #include "general.h"
 #include "gdb_if.h"

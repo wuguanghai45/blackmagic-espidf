@@ -96,4 +96,4 @@ void platform_set_baud(uint32_t baud);
 
 extern bool debug_bmp;
 
-extern uint32_t swd_delay_cnt;
+extern uint32_t target_clk_divider;

@@ -51,6 +51,7 @@ public:
     void gdb_out(const char *buf);
     void gdb_voutf(const char *fmt, va_list ap);
     void gdb_outf(const char *fmt, ...);
+    char pbuf[BUF_SIZE+1];
 
     virtual int fileno() = 0;
 
@@ -64,7 +65,6 @@ protected:
     int gdb_main_loop(struct target_controller *tc, bool in_syscall);
     void handle_q_string_reply(const char *str, const char *param);
 
-    char pbuf[BUF_SIZE+1];
     bool non_stop = 0;
     bool no_ack_mode = 0;
     

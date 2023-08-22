@@ -29,7 +29,7 @@ extern "C" {
 #include "hex_utils.h"
 #include "gdb_if.h"
 #include "gdb_packet.h"
-#include "gdb_main.h"
+// #include "gdb_main.h"
 #include "gdb_hostio.h"
 #include "target.h"
 #include "command.h"
@@ -166,40 +166,40 @@ static bool cmd_read_ap(target *t, int argc, const char **argv) {
 int GDB::gdb_main_loop(struct target_controller *tc, bool in_syscall)
 {
 	
-	{
-		GDB_LOCK();
-	    ESP_LOGI(__func__, "cur_target=%p last_target=%p\n", cur_target, last_target);
-		if((!cur_target && !last_target) || num_clients == 1) {
-			ESP_LOGI("GDB", "Scanning SWD");
-			int devs = -1;
-			volatile struct exception e;
-			TRY_CATCH (e, EXCEPTION_ALL) {
-				devs = adiv5_swdp_scan(0);
-				ESP_LOGI("GDB", "Found %d", devs);
-				if(devs > 0) {
-					cur_target = target_attach_n(1, &gdb_controller);
-					if(cur_target) {
-						static const command_s cmds[]  = { 
-							{"reset", cmd_reset, "OpenOCD style target reset: reset [init halt run]"}, 
-							{"WriteDP", cmd_write_dp, "STLINK helper"},
-							{"ReadAP", cmd_read_ap, "STLINK helper"},
+	// {
+	// 	GDB_LOCK();
+	//     ESP_LOGI(__func__, "cur_target=%p last_target=%p\n", cur_target, last_target);
+	// 	if((!cur_target && !last_target) || num_clients == 1) {
+	// 		ESP_LOGI("GDB", "Scanning SWD");
+	// 		int devs = -1;
+	// 		volatile struct exception e;
+	// 		TRY_CATCH (e, EXCEPTION_ALL) {
+	// 			devs = adiv5_swdp_scan(0);
+	// 			ESP_LOGI("GDB", "Found %d", devs);
+	// 			if(devs > 0) {
+	// 				cur_target = target_attach_n(1, &gdb_controller);
+	// 				if(cur_target) {
+	// 					static const command_s cmds[]  = { 
+	// 						{"reset", cmd_reset, "OpenOCD style target reset: reset [init halt run]"}, 
+	// 						{"WriteDP", cmd_write_dp, "STLINK helper"},
+	// 						{"ReadAP", cmd_read_ap, "STLINK helper"},
 
-							{0,0,0} 
-						};
-						target_add_commands(cur_target, cmds, "Target");
-					}
-				}
-			}
-			switch (e.type) {
-			case EXCEPTION_TIMEOUT:
-				ESP_LOGI("GDB", "Timeout during scan. Is target stuck in WFI?\n");
-				break;
-			case EXCEPTION_ERROR:
-				ESP_LOGI("GDB", "Exception: %s\n", e.msg);
-				break;
-			}
-		}
-	}
+	// 						{0,0,0} 
+	// 					};
+	// 					target_add_commands(cur_target, cmds, "Target");
+	// 				}
+	// 			}
+	// 		}
+	// 		switch (e.type) {
+	// 		case EXCEPTION_TIMEOUT:
+	// 			ESP_LOGI("GDB", "Timeout during scan. Is target stuck in WFI?\n");
+	// 			break;
+	// 		case EXCEPTION_ERROR:
+	// 			ESP_LOGI("GDB", "Exception: %s\n", e.msg);
+	// 			break;
+	// 		}
+	// 	}
+	// }
 
 	int size;
 
