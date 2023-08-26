@@ -269,6 +269,7 @@ int GDB::gdb_main_loop(struct target_controller *tc, bool in_syscall)
 			continue;
 		} 
 		SET_IDLE_STATE(0);
+		DEBUG_GDB("*** packet: %s\n", pbuf);
 		switch(pbuf[0]) {
 		/* Implementation of these is mandatory! */
 		case 'g': { /* 'g': Read general registers */
