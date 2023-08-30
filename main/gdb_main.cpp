@@ -268,6 +268,8 @@ int GDB::gdb_main_loop(struct target_controller *tc, bool in_syscall)
 
 			continue;
 		} 
+
+		DEBUG_GDB("*** packet: %s\n", pbuf);
 		SET_IDLE_STATE(0);
 		DEBUG_GDB("*** packet: %s\n", pbuf);
 		switch(pbuf[0]) {

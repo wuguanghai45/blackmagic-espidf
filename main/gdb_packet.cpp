@@ -175,6 +175,8 @@ void GDB::gdb_putpacket(const char *packet, int size, char pktstart)
 	char xmit_csum[3];
 	int tries = 0;
 
+	DEBUG_GDB("gdb_putpacket %s", packet);
+
 	do {
 		DEBUG_WIRE("%s : ", __func__);
 		csum = 0;
@@ -281,6 +283,9 @@ void GDB::gdb_putpacket2(const char *const packet1, const size_t size1, const ch
 {
 	char xmit_csum[3];
 	size_t tries = 0;
+
+	DEBUG_GDB("gdb_putpacket2 %s", packet1);
+	DEBUG_GDB("gdb_putpacket2 %s", packet2);
 
 	do {
 		DEBUG_WIRE("%s: ", __func__);
