@@ -57,6 +57,27 @@ enum gdb_signal {
 static target_s *cur_target;
 static target_s *last_target;
 
+void log_xml(char *str_xml) {
+    int length = strlen(str_xml);
+    char *str1 = (char *)malloc(201);
+    char *str2 = (char *)malloc(201);
+
+
+    // Move characters to the beginning of the string
+    for (int i = 0; i <= 200; i++) {
+		str1[i] = str_xml[i];
+		str2[i] = str_xml[i+200];
+    }
+	str1[201] = '\0';
+	str2[201] = '\0';
+
+	DEBUG_INFO("log_xml %s", str1);
+	DEBUG_INFO("log_xml %s", str2);
+
+    free(str1);
+    free(str2);
+}
+
 void gdb_target_destroy_callback(struct target_controller *tc, target *t)
 {
 		(void)tc;
@@ -636,8 +657,10 @@ GDB::handle_q_packet(char *packet, int len)
 		char* buf = (char*)malloc(1024);
 		target_mem_map(cur_target, buf, 1024); /* Fixme: Check size!*/
 		//HACK to get SFRs working
-		strcpy(buf+strlen(buf)-strlen("</memory-map>"), 
-		    "<memory type=\"ram\" start=\"0x60000000\" length=\"0xCFFFFFFF\"/></memory-map>\0");
+		// strcpy(buf+strlen(buf)-strlen("</memory-map>"), 
+		//     "<memory type=\"ram\" start=\"0x60000000\" length=\"0xCFFFFFFF\"/></memory-map>\0");
+
+		log_xml(buf);
 
 		handle_q_string_reply(buf, packet + 23);
 
@@ -769,19 +792,13 @@ GDB::handle_v_packet(char *packet, int plen)
 		/* Erase Flash Memory */
 		DEBUG_GDB("Flash Erase %08lX len:%d\n", addr, len);
 		if(!cur_target) { gdb_putpacketz("EFF"); return; }
-		if(!flash_mode) {
-			/* Reset target if first flash command! */
-			/* This saves us if we're interrupted in IRQ context */
-			target_reset(cur_target);
-			target_halt_request(cur_target);
-			flash_mode = 1;
-		}
+
 		if(target_flash_erase(cur_target, addr, len)) {
 			gdb_putpacketz("OK");
 		} else {
 			DEBUG_GDB("Flash Erase Failed\n");
 
-			flash_mode = 0;
+			target_flash_complete(cur_target);
 			gdb_putpacketz("EFF");
 		}
 
@@ -795,7 +812,7 @@ GDB::handle_v_packet(char *packet, int plen)
 		if(cur_target && target_flash_write(cur_target, addr, (void*)(packet + bin), len)) {
 			gdb_putpacketz("OK");
 		} else {
-			flash_mode = 0;
+			target_flash_complete(cur_target);
 			gdb_putpacketz("EFF");
 		}
 	} else if (!strncmp(packet, "vCont", 5)) {

@@ -62,7 +62,7 @@
 
 #include "ota-tftp.h"
 
-uint32_t target_clk_divider=100;
+uint32_t target_clk_divider=0;
 #define SWD_CYCLES_PER_CLOCK 19L
 #define SWD_TOTAL_CYCLES 127L
 
