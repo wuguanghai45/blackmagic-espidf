@@ -37,6 +37,7 @@
 extern "C" {
 #include "exception.h"
 #include "target.h"
+#include "general.h"
 }
 
 #include <string.h>
@@ -189,6 +190,7 @@ private:
 	}
 
 	unsigned char gdb_if_getchar(void) {
+		DEBUG_INFO("start gdb_if_getchar");
 		uint8_t tmp;
 
 		int ret;
@@ -196,8 +198,10 @@ private:
 		if(ret <= 0) {
 			destroy();
 			//should not be reached
+			DEBUG_INFO("end gdb_if_getchar 2");
 			return 0;
 		}
+		DEBUG_INFO("end gdb_if_getchar 1");
 		// if((tmp == '\x03') || (tmp == '\x04')) {
 		// 	ESP_LOGW(__func__, "Got Interrupt request");
 		// }

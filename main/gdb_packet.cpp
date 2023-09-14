@@ -135,17 +135,6 @@ int GDB::gdb_getpacket(char *packet, int size)
 		gdb_if_putchar('+', 1); /* send ack */
 	packet[i] = 0;
 
-#if PC_HOSTED == 1
-	DEBUG_WIRE("%s : ", __func__);
-	for(int j = 0; j < i; j++) {
-		c = packet[j];
-		if ((c >= 32) && (c < 127))
-			DEBUG_WIRE("%c", c);
-		else
-			DEBUG_WIRE("\\x%02X", c);
-	}
-	DEBUG_WIRE("\n");
-#endif
 	return i;
 }
 

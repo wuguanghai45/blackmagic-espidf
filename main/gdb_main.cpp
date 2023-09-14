@@ -158,7 +158,7 @@ static bool cmd_write_dp(target *t, int argc, const char **argv) {
 
 	uint32_t addr = strtoul(argv[1], 0, 16);
 	uint32_t val = strtoul(argv[2], 0, 16);
-	adiv5_access_port_s *ap = cortexm_ap(cur_target);
+	adiv5_access_port_s *ap = cortex_ap(cur_target);
 	//adiv5_dp_write(ap->dp, addr, val);
 
 	return 255;
@@ -168,7 +168,7 @@ static bool cmd_read_ap(target *t, int argc, const char **argv) {
 	if(!cur_target) {
 		return false;
 	}
-	adiv5_access_port_s *ap = cortexm_ap(cur_target);
+	adiv5_access_port_s *ap = cortex_ap(cur_target);
 	uint32_t addr = strtoul(argv[1], 0, 16);
 	ESP_LOGI(__func__, "addr: %x", addr);
 	uint32_t reg = adiv5_dp_read(ap->dp, ADIV5_AP_BASE);
@@ -291,7 +291,7 @@ int GDB::gdb_main_loop(struct target_controller *tc, bool in_syscall)
 		} 
 
 		SET_IDLE_STATE(0);
-		DEBUG_GDB("*** packet: %s\n", pbuf);
+		// DEBUG_GDB("*** packet: %s\n", pbuf);
 		switch(pbuf[0]) {
 		/* Implementation of these is mandatory! */
 		case 'g': { /* 'g': Read general registers */
