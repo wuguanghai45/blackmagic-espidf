@@ -49,7 +49,7 @@ int GDB::gdb_getpacket(char *packet, int size)
              * start ('$') or a BMP remote packet start ('!').
 			 */
 			do {
-				packet[0] = gdb_if_getchar_to(20);
+				packet[0] = gdb_if_getchar();
 				if(packet[0] == 0xFF) return 0;
 
 				if (packet[0]==0x04) return 1;
@@ -135,6 +135,8 @@ int GDB::gdb_getpacket(char *packet, int size)
 		gdb_if_putchar('+', 1); /* send ack */
 	packet[i] = 0;
 
+	// DEBUG_INFO("gdb_get_packet %s", packet);
+
 	return i;
 }
 
@@ -164,7 +166,7 @@ void GDB::gdb_putpacket(const char *packet, int size, char pktstart)
 	char xmit_csum[3];
 	int tries = 0;
 
-	DEBUG_GDB("gdb_putpacket %s", packet);
+	// DEBUG_GDB("gdb_putpacket %s", packet);
 
 	do {
 		DEBUG_WIRE("%s : ", __func__);

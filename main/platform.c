@@ -593,8 +593,8 @@ void app_main(void) {
 
   platform_init();
 
-  xTaskCreate(&dbg_task, "dbg_main", 1024, NULL, 4, NULL);
-  xTaskCreate(&gdb_net_task, "gdb_net", 2048, NULL, 1, NULL);
+  xTaskCreate(&dbg_task, "dbg_main", 4096, NULL, 4, NULL);
+  xTaskCreate(&gdb_net_task, "gdb_net", 4096, NULL, 2, NULL);
 
 #if CONFIG_TARGET_UART
   xTaskCreate(&uart_rx_task, "uart_rx_task", 1200, NULL, 5, NULL);

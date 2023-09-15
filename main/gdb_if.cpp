@@ -45,6 +45,12 @@ extern "C" {
 
 #include "gdb_if.hpp"
 
+#define BUFFER_SIZE 1024
+
+static unsigned char buffer[BUFFER_SIZE];
+static int buffer_index = 0;
+static int buffer_size = 0;
+
 static xSemaphoreHandle gdb_mutex;
 static int gdb_mutex_lockcount;
 
@@ -185,27 +191,53 @@ private:
 			char c = gdb_if_getchar();
 			return c;
 		}
+		// DEBUG_INFO("gdb_if_getchar_to timeout %i", timeout);
 
 		return 0xFF;
 	}
 
-	unsigned char gdb_if_getchar(void) {
-		DEBUG_INFO("start gdb_if_getchar");
-		uint8_t tmp;
+	// unsigned char gdb_if_getchar(void) {
+	// 	// DEBUG_INFO("start gdb_if_getchar");
+	// 	uint8_t tmp;
 
-		int ret;
-		ret = recv(sock, &tmp, 1, 0);
-		if(ret <= 0) {
-			destroy();
-			//should not be reached
-			DEBUG_INFO("end gdb_if_getchar 2");
-			return 0;
+	// 	int ret;
+	// 	ret = recv(sock, &tmp, 1, 0);
+	// 	if(ret <= 0) {
+	// 		destroy();
+	// 		//should not be reached
+	// 		// DEBUG_INFO("end gdb_if_getchar 2");
+	// 		return 0;
+	// 	}
+	// 	// DEBUG_INFO("end gdb_if_getchar 1");
+	// 	// if((tmp == '\x03') || (tmp == '\x04')) {
+	// 	// 	ESP_LOGW(__func__, "Got Interrupt request");
+	// 	// }
+	// 	return tmp;
+	// }
+
+	unsigned char gdb_if_getchar(void) {
+		if (buffer_index >= buffer_size) {
+			int ret = recv(sock, buffer, BUFFER_SIZE, 0);
+
+			// DEBUG_INFO("gdb_if_getchar %i", ret);
+			// DEBUG_INFO("gdb_if_getchar ret size %i", ret);
+
+			if (ret <= 0) {
+				destroy();
+				// should not be reached
+				return 0;
+			}
+
+			buffer_size = ret;
+			buffer_index = 0;
 		}
-		DEBUG_INFO("end gdb_if_getchar 1");
-		// if((tmp == '\x03') || (tmp == '\x04')) {
-		// 	ESP_LOGW(__func__, "Got Interrupt request");
-		// }
-		return tmp;
+
+		// Get the next character from the buffer
+		unsigned char next_char = buffer[buffer_index++];
+
+		// You can add additional processing here if needed
+
+		return next_char;
 	}
     void gdb_if_putchar(unsigned char c, int flush) {
 		buf[bufsize++] = c;

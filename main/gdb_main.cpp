@@ -44,6 +44,8 @@ extern "C" {
 #include "gdb_if.hpp"
 #include "task.h"
 
+int flash_index=0;
+
 enum gdb_signal {
 	GDB_SIGINT = 2,
 	GDB_SIGTRAP = 5,
@@ -807,7 +809,7 @@ GDB::handle_v_packet(char *packet, int plen)
 		//DEBUG_GDB("plen: %d(%x) %d", plen, plen, bin);
 		GDB_LOCK();
 		len = plen - bin;
-		DEBUG_GDB("Flash Write %08lX len:%d\n", addr, len);
+		// DEBUG_GDB("Flash Write %08lX len:%d  flash_index: %i\n", addr, len, flash_index++);
 		//ESP_LOG_BUFFER_HEXDUMP("Flash", packet+bin, len, 3);
 		if(cur_target && target_flash_write(cur_target, addr, (void*)(packet + bin), len)) {
 			gdb_putpacketz("OK");
