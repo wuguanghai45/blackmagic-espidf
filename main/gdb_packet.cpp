@@ -49,7 +49,7 @@ int GDB::gdb_getpacket(char *packet, int size)
              * start ('$') or a BMP remote packet start ('!').
 			 */
 			do {
-				packet[0] = gdb_if_getchar();
+				packet[0] = gdb_if_getchar_to(20);
 				if(packet[0] == 0xFF) return 0;
 
 				if (packet[0]==0x04) return 1;

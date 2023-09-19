@@ -45,11 +45,7 @@ extern "C" {
 
 #include "gdb_if.hpp"
 
-#define BUFFER_SIZE 1024
-
-static unsigned char buffer[BUFFER_SIZE];
-static int buffer_index = 0;
-static int buffer_size = 0;
+#define BUFFER_SIZE 256
 
 static xSemaphoreHandle gdb_mutex;
 static int gdb_mutex_lockcount;
@@ -177,6 +173,10 @@ private:
 
 	unsigned char gdb_if_getchar_to(int timeout) {
 		GDBBreakLock brk;
+		if (buffer_index < buffer_size) {
+			char c = buffer[buffer_index++];
+			return c;
+		}
 
 		fd_set fds;
 		struct timeval tv;
@@ -257,6 +257,9 @@ private:
 	uint8_t buf[256];
 	int bufsize = 0;
 	xTaskHandle pid;
+	unsigned char buffer[BUFFER_SIZE];
+	int buffer_index = 0;
+	int buffer_size = 0;
 	int sock;
 };
 
