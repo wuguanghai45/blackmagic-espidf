@@ -465,7 +465,7 @@ void wifi_init_softap()
 }
 
 
-void wifi_init_sta()
+void wifi_init_sta(const char *ssid, const char *password)
 {
     ESP_LOGI(__func__, "wifi_init_sta begun.");
 
@@ -476,10 +476,13 @@ void wifi_init_sta()
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
     wifi_config_t wifi_config = {
         .sta = {
-            .ssid = CONFIG_ESP_WIFI_SSID,
-            .password = CONFIG_ESP_WIFI_PASSWORD
+          .ssid = "",
+          .password = "",
         },
     };
+
+    strncpy((char *)wifi_config.sta.ssid, ssid, sizeof(wifi_config.sta.ssid));
+    strncpy((char *)wifi_config.sta.password, password, sizeof(wifi_config.sta.password));
 
     result = esp_base_mac_addr_get(mac_address);
 
@@ -535,7 +538,6 @@ void app_main(void) {
 #if CONFIG_TARGET_UART
 #warning Target UART configured.  ESP8266 debugging info will not be available via UART.
   ESP_LOGI(__func__, "deactivating debug uart");
-  esp_log_set_putchar(putc_noop);
 #endif
 
   esp_err_t ret = nvs_flash_init();
@@ -543,15 +545,32 @@ void app_main(void) {
     ESP_ERROR_CHECK(nvs_flash_erase());
     ret = nvs_flash_init();
   }
+
   ESP_ERROR_CHECK(ret);
 
   ESP_ERROR_CHECK(nvs_open("config", NVS_READWRITE, &h_nvs_conf));
-  
   tcpip_adapter_init();
   ESP_ERROR_CHECK(esp_event_loop_init(event_handler, NULL));
-  
+
+  char ssid[32] = CONFIG_ESP_WIFI_SSID;
+  char password[64] = CONFIG_ESP_WIFI_PASSWORD;
+  size_t ssid_len, password_len;
+  nvs_get_str(h_nvs_conf, "ssid", NULL, &ssid_len);
+  nvs_get_str(h_nvs_conf, "ssid", ssid, &ssid_len);
+  nvs_get_str(h_nvs_conf, "password", NULL, &password_len);
+  nvs_get_str(h_nvs_conf, "password", password, &password_len);
+  ESP_LOGI(__func__, "ssid_len %i", ssid_len);
+  ESP_LOGI(__func__, "ssid %s", ssid);
+  ESP_LOGI(__func__, "password_len %i", ssid_len);
+  ESP_LOGI(__func__, "password %s", password);
+
+  uint32_t baud = 115200;
+  nvs_get_u32(h_nvs_conf, "uartbaud", &baud);
+
+  ESP_LOGI(__func__, "uartbaud %i", baud);
+
 #if CONFIG_ESP_WIFI_IS_STATION
-  wifi_init_sta();
+  wifi_init_sta(ssid, password);
 #else
   wifi_init_softap();
 
@@ -568,9 +587,6 @@ void app_main(void) {
   ESP_LOGI(__func__, "configuring uart for target");
 
   esp_log_set_putchar(putc_remote);
-
-  uint32_t baud = 115200;
-  nvs_get_u32(h_nvs_conf, "uartbaud", &baud);
 
   uart_set_baudrate(0, baud);
   uart_set_baudrate(1, baud);
@@ -597,14 +613,14 @@ void app_main(void) {
   xTaskCreate(&gdb_net_task, "gdb_net", 4096, NULL, 2, NULL);
 
 #if CONFIG_TARGET_UART
-  xTaskCreate(&uart_rx_task, "uart_rx_task", 1200, NULL, 5, NULL);
-  xTaskCreate(&net_uart_task, "net_uart_task", 1200, NULL, 5, NULL);
+  xTaskCreate(&uart_rx_task, "uart_rx_task", 2400, NULL, 5, NULL);
+  xTaskCreate(&net_uart_task, "net_uart_task", 2400, NULL, 5, NULL);
 #endif
 
   ota_tftp_init_server(69, 4);
 
   ESP_LOGI(__func__, "Free heap %d\n", esp_get_free_heap_size());
- 
+  esp_log_set_putchar(putc_noop);
 }
 
 #ifndef ENABLE_DEBUG

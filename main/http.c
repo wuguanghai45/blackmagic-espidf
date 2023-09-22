@@ -21,11 +21,32 @@
 #include <queue.h>
 #include "platform.h"
 #include "hashmap.h"
+#include "cJSON.h"
+#include "nvs_flash.h"
 
 extern char _binary_image_espfs_start[] ;
 extern void platform_set_baud(uint32_t);
 
 static HttpdFreertosInstance instance;
+
+static void cgiJsonResponseCommon(HttpdConnData *connData, cJSON *jsroot){
+	char *json_string = NULL;
+
+	//// Generate the header
+	//We want the header to start with HTTP code 200, which means the document is found.
+	httpdStartResponse(connData, 200);
+	httpdHeader(connData, "Cache-Control", "no-store, must-revalidate, no-cache, max-age=0");
+	httpdHeader(connData, "Expires", "Mon, 01 Jan 1990 00:00:00 GMT");  //  This one might be redundant, since modern browsers look for "Cache-Control".
+	httpdHeader(connData, "Content-Type", "application/json; charset=utf-8"); //We are going to send some JSON.
+	httpdEndHeaders(connData);
+	json_string = cJSON_Print(jsroot);
+    if (json_string)
+    {
+    	httpdSend(connData, json_string, -1);
+        cJSON_free(json_string);
+    }
+    cJSON_Delete(jsroot);
+}
 
 static void on_term_recv(Websock *ws, char *data, int len, int flags) {
 #ifdef USE_GPIO2_UART
@@ -158,6 +179,41 @@ static const char* const task_state_name[] = {
 	"eInvalid"			/* Used as an 'invalid state' value. */
 };
 
+CgiStatus cgi_set_wifi(HttpdConnData *connData) {
+  int ssid_len;
+  int password_len;
+  char ssid[32];
+  char password[32];
+
+  if (connData->isConnectionClosed) {
+    //Connection aborted. Clean up.
+    return HTTPD_CGI_DONE;
+  }
+
+  ssid_len = httpdFindArg(connData->getArgs, "ssid", ssid, sizeof(ssid));
+  password_len = httpdFindArg(connData->getArgs, "password", password, sizeof(password));
+
+  ESP_LOGI(__func__, "ssid %i", ssid_len);
+  ESP_LOGI(__func__, "password_len %i", password_len);
+
+  if(ssid_len > 0 && password_len > 0) {
+    nvs_handle_t nvs_handle;
+    ESP_ERROR_CHECK(nvs_open("config", NVS_READWRITE, &nvs_handle));
+    ESP_ERROR_CHECK(nvs_set_str(nvs_handle, "ssid", ssid));
+    ESP_ERROR_CHECK(nvs_set_str(nvs_handle, "password", password));
+    ESP_ERROR_CHECK(nvs_commit(nvs_handle));
+    nvs_close(nvs_handle);
+    cJSON *jsroot = cJSON_CreateObject();
+    cJSON_AddStringToObject(jsroot, "ssid", ssid);
+    cJSON_AddStringToObject(jsroot, "password", password);
+    cJSON_AddBoolToObject(jsroot, "success", true);
+    cgiJsonResponseCommon(connData, jsroot); // Send the json response!
+    esp_restart();
+  }
+
+  return HTTPD_CGI_DONE;
+}
+
 CgiStatus cgi_status(HttpdConnData *connData) {
   int len;
   char buff[256];
@@ -279,6 +335,7 @@ HttpdBuiltInUrl builtInUrls[]={
   {"/uart/baud", cgi_baud, NULL, 0},
   {"/uart/break", cgi_uart_break, NULL, 0},
   {"/status", cgi_status, NULL, 0},
+  {"/wifi/set", cgi_set_wifi, NULL, 0},
 //
   {"/terminal", cgiWebsocket, (const void*)on_term_connect, 0},
   {"/debugws", cgiWebsocket, (const void*)on_debug_connect, 0},
