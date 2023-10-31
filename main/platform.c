@@ -301,12 +301,13 @@ void uart_rx_task(void *parameters) {
         http_term_broadcast_data(buf, bufpos);
 
         if (tcp_client_sock) {
-        	ret = send(tcp_client_sock, buf, bufpos, 0);
-        	if(ret < 0) {
-        		ESP_LOGE(__func__, "tcp send() failed (%s)", strerror(errno));
-        		close(tcp_client_sock);
-        		tcp_client_sock = 0;
-        	}
+        	// ret = send(tcp_client_sock, buf, bufpos, 0);
+          ESP_LOGI(__func__, "tcp send() ");
+        	// if(ret < 0) {
+        	// 	ESP_LOGE(__func__, "tcp send() failed (%s)", strerror(errno));
+        	// 	close(tcp_client_sock);
+        	// 	tcp_client_sock = 0;
+        	// }
         }
 
         if(udp_peer_addr.sin_addr.s_addr) {
@@ -590,7 +591,7 @@ void app_main(void) {
 #if CONFIG_TARGET_UART
   ESP_LOGI(__func__, "configuring uart for target");
 
-  esp_log_set_putchar(putc_remote);
+  // esp_log_set_putchar(putc_remote);
 
   uart_set_baudrate(0, baud);
   uart_set_baudrate(1, baud);
@@ -624,7 +625,7 @@ void app_main(void) {
   ota_tftp_init_server(69, 4);
 
   ESP_LOGI(__func__, "Free heap %d\n", esp_get_free_heap_size());
-  esp_log_set_putchar(putc_noop);
+  // esp_log_set_putchar(putc_noop);
 }
 
 #ifndef ENABLE_DEBUG
